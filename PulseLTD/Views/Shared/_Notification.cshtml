@@ -1,0 +1,67 @@
+﻿@using PulseLTD.Common;
+
+<style>
+    .close {
+        position: absolute;
+        right: 5px;
+        top: -5px;
+        padding: 0;
+    }
+
+    .top-less-50 {
+        top: -50px;
+    }
+</style>
+<!-- success notification -->
+<div class="position-relative">
+    <div class="alert alert-success success-notification position-absolute top-less-50 end-0" id="success-notification-div" style="display:none;">
+        <button type="button" class="btn close closeSuccess">&times;</button>
+        <span id="successMsg">
+        </span>
+    </div>
+
+    <!-- error notification -->
+    <div class="alert alert-danger error-notification position-absolute top-less-50 end-0" id="error-notification-div" style="display:none;">
+        <button type="button" class="btn close closeErrormsg">&times;</button>
+        <span id="errorMsg">
+        </span>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('.closeErrormsg').click(function () { $(".error-notification").fadeOut(10); });
+        $('.closeSuccess').click(function () { $(".success-notification").fadeOut(10); });
+
+    });
+
+    //$(window).load(function () {
+    //    setTimeout(function () {
+    //        ClearMessages();
+    //    }, 6000);
+    //});
+
+    function ClearMessages() {
+        $("#success-notification-div-for").fadeOut(2000);
+        $("#error-notification-div-for").fadeOut(2000);
+        $("#success-notification-div").fadeOut(2000);
+        $("#error-notification-div").fadeOut(2000);
+    }
+
+        function showNotification(message, type) {
+            if (type == '@Enums.NotifyType.SuccessMessage.GetHashCode()') {
+                $('#successMsg').html(message);
+                $('#success-notification-div').show();
+                setTimeout(function () {
+                    ClearMessages();
+                }, 6000);
+            }
+            else if (type == '@Enums.NotifyType.ErrorMessage.GetHashCode()') {
+                $('#errorMsg').html(message);
+                $('#error-notification-div').show();
+                setTimeout(function () {
+                    ClearMessages();
+                }, 6000);
+            }
+        }
+</script>

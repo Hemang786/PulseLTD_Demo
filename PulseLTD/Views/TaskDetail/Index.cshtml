@@ -1,0 +1,107 @@
+﻿@model PulseLTD.Models.TaskDetail
+@using PulseLTD.Common;
+
+@{
+    ViewBag.Title = "Task Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h3 class="title">@ViewBag.Title</h3>
+<p>
+    @Html.ActionLink("Add Task", ActionHelper.Create, ControllerHelper.TaskDetail, "", new { @class = "btn btn-primary" })
+    <button onclick="DownloadZip()" class="btn btn-primary float-end">Download</button>
+</p>
+
+<div class="table-responsive">
+    <table id="tblTaskDetails" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th></th>
+                <th>
+                    Title
+                </th>
+                <th>
+                    Image Name
+                </th>
+                <th>
+                    Image
+                </th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+@section scripts {
+    <script>
+        //#region bind grid
+        var taskDataTable = $('#tblTaskDetails').DataTable({
+            select: {
+                select: true,
+                style: 'multi',
+
+            },
+            "responsive": true,
+            "autoWidth": false,
+            "serverSide": false,
+            "ajax": {
+                url: '@Url.Action("GetDetails", "TaskDetail")'
+            },
+            type: 'POST',
+            datatype: 'json',
+            columns: [
+                { data: "Id", name: "Id" },
+                { data: "Title", name: "Title" },
+                { data: "ImageName", name: "ImageName" },
+                {
+                    data: "ImageText", name: "ImageText",
+                    mRender: function (data, type, row, meta) {
+                        var imgsrc = 'data:image/png;base64,' + data; // here data should be in base64 string
+                        return '<img class="img-responsive" src="' + imgsrc + '" alt="tbl_Image" height="100px" width="100px">';
+                    }
+                },
+            ],
+            "columnDefs": [
+                {
+                    "targets": [0],
+                    "visible": false
+                },
+                {
+                    "targets": [1],
+                    "width": "20%"
+                },
+                {
+                    "targets": [2],
+                    "width": "20%"
+                },
+                {
+                    "targets": [3],
+                    "width": "20%"
+                }
+            ],
+            "lengthMenu": [[10, 50, 100, 500, 1000, -1], [10, 50, 100, 500, 1000, "All"]]
+        });
+        //#endRegion bind grid
+
+        //#region DownloadZip
+        function DownloadZip() {
+            var rows = taskDataTable.rows();
+            if (rows == null || rows == undefined || rows[0] == null || rows[0] == undefined || rows[0].length <= 0) {
+                showNotification('@MessageHelper.NoDataAvailable', '@Enums.NotifyType.ErrorMessage.GetHashCode()');
+                return false;
+            }
+            var selRows = taskDataTable.rows('.selected').data();
+            var _ids = [];
+            if (selRows != null && selRows != undefined && selRows.length > 0) {
+                for (var i = 0; i < selRows.length; i++) {
+                    _ids.push(selRows[i].Id);
+                }
+                window.location.href = "@Url.RouteUrl(new{ Controller = ControllerHelper.TaskDetail, Action = ActionHelper.DownloadZipFile })?ids=" + _ids;
+            }
+            else {
+                showNotification('@MessageHelper.SelectRows', '@Enums.NotifyType.ErrorMessage.GetHashCode()');
+            }
+        }
+        //#endRegion DownloadZip
+
+    </script>
+}

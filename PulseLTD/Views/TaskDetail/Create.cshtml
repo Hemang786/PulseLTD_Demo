@@ -1,0 +1,126 @@
+﻿@model PulseLTD.Models.TaskDetail
+@using PulseLTD.Common;
+
+@{
+    ViewBag.Title = "Add Task";
+}
+<style>
+    input.input-validation-error {
+        border: 1px solid #E80C4D;
+    }
+
+    label {
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+</style>
+
+<h3 class="title">@ViewBag.Title</h3>
+<div class="col-lg-12 title">
+    <div class="row">
+        <form id="frmTask">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-6 form-group">
+                        @Html.LabelFor(model => model.Title)
+                        @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control", @maxLength = 100 } })
+                        @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="col-sm-6 form-group">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 form-group">
+                        @Html.LabelFor(model => model.ImageName, htmlAttributes: new { @class = "control-label col-md-2" })
+                        @Html.EditorFor(model => model.ImageName, new { htmlAttributes = new { @class = "form-control", type = "file", onchange = "ShowPreview(this)", accept = "image/*" } })
+                        @Html.ValidationMessageFor(model => model.ImageName, "", new { @class = "text-danger" })
+                        <br />
+                        <img id="selImage" style="height:100px;width:100px">
+                    </div>
+                    <div class="col-sm-6 form-group">
+                    </div>
+                </div>
+                <input type="button" value="Save" onclick="submitTask()" class="btn btn-lg btn-primary" />
+                @Html.ActionLink("Back to List", ActionHelper.Index, ControllerHelper.TaskDetail, "", htmlAttributes: new { @class = "btn btn-lg btn-secondary" })
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    //#region Save form
+    function submitTask() {
+        if ($('#frmTask').valid()) {
+            var formData = new FormData();
+            var totalFiles = document.getElementById("ImageName").files.length;
+            for (var i = 0; i < totalFiles; i++) {
+                var File = document.getElementById("ImageName").files[i];
+                formData.append("postedFile", File);
+                formData.append("ImageName", File.name);
+            }
+            formData.append("Title", $("#Title").val());
+
+            $.ajax({
+                url: encodeURI('@Url.Action(ActionHelper.Create, ControllerHelper.TaskDetail)'),
+                async: false,
+                type: '@MethodType.Post',
+                data: formData,
+                contentType: false,
+                processData: false,
+                dataType: false,
+                success: function (data) {
+                    showNotification(data.Message, data.Type);
+                    if (data.Type  == '@Enums.NotifyType.SuccessMessage.GetHashCode()') {
+                        $('#frmTask').trigger("reset");
+                        $('#selImage').removeAttr('src');
+                    }
+                },
+                error: function (xhr) {
+                    showNotification('@MessageHelper.SomethingWrong', '@Enums.NotifyType.ErrorMessage.GetHashCode()');
+                }
+            });
+        }
+    }
+    //#endRegion Save form
+
+    //#region PreviewImage
+    function ShowPreview(input) {
+        if (input.files != null && input.files != undefined && input.files.length > 0) {
+            var selectedFile = input.files[0];
+
+            //Check validation for file type allowed only image
+            var fileType = selectedFile.type.split('/');
+            if (fileType != null && fileType != undefined && fileType.length > 0) {
+                if (fileType[0].toLowerCase() != "image") {
+                    showNotification('@MessageHelper.AcceptImage', '@Enums.NotifyType.ErrorMessage.GetHashCode()');
+                    $("#ImageName").val('');
+                    $('#selImage').removeAttr('src');
+                    return false;
+                }
+            }
+
+            //Check validation for file size (max 5 mb)
+            var fileSize = selectedFile.size;
+            if ((fileSize / (1024 * 1024)) > 5) { // make it in MB so divide by 1024*1024
+                showNotification('@MessageHelper.ImageSize','@Enums.NotifyType.ErrorMessage.GetHashCode()');
+                $("#ImageName").val('');
+                $('#selImage').removeAttr('src');
+                return false;
+            }
+            //Check validation for file size allowed only image
+            var ImageDir = new FileReader();
+            ImageDir.onload = function (e) {
+                $('#selImage').attr('src', e.target.result);
+            }
+            ImageDir.readAsDataURL(input.files[0]);
+        }
+        return true;
+    }
+    //#endRegion PreviewImage
+
+</script>
